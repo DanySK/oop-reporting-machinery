@@ -14,6 +14,14 @@ sourceSets {
         java {
             srcDirs("src")
         }
+        resources {
+            srcDirs("res")
+        }
+    }
+    test {
+        java {
+            srcDirs("testsrc")
+        }
     }
 }
 
