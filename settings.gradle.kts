@@ -7,4 +7,4 @@ buildscript {
 
 bootstrapRefreshVersionsAndDependencies()
 
-rootProject.name="oop-reporting-machinery"
+rootProject.name = "oop-reporting-machinery"
