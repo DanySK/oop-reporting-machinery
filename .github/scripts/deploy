@@ -1,2 +1,2 @@
 #!/bin/sh
-./gradlew buildDashboard
+echo "Deployment phase disabled"
