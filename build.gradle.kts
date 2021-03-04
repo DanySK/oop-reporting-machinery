@@ -46,7 +46,7 @@ dependencies {
 }
 
 tasks.withType<Test>() {
-    isIgnoreFailures = true
+    ignoreFailures = true
     useJUnitPlatform()
 }
 
