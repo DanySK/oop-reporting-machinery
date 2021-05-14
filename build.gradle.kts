@@ -63,7 +63,7 @@ spotbugs {
 tasks.withType<com.github.spotbugs.snom.SpotBugsTask> {
     ignoreFailures = true
     reports {
-        create("html") {
+        create("xml") {
             enabled = true
         }
     }
