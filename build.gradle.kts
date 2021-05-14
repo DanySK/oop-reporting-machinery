@@ -248,7 +248,7 @@ tasks.register("blame") {
                 when (root.tagName) {
                     "pmd" -> PmdQAInfoExtractor(root)
                     "pmd-cpd" -> CpdQAInfoExtractor(root)
-                    "checkstyle" -> CpdQAInfoExtractor(root)
+                    "checkstyle" -> CheckstyleQAInfoExtractor(root)
                     "BugCollection" -> SpotBugsQAInfoExtractor(root)
                     else -> emptyList<QAInfo>().also { println("Unknown root type ${root.tagName}")}
                 }
