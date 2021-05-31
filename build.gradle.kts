@@ -45,53 +45,60 @@ dependencies {
         ?.forEach { implementation(files("lib/${it.name}")) }
 }
 
-tasks.withType<Test>() {
-    ignoreFailures = true
-    useJUnitPlatform()
-}
+allprojects {
+    apply(plugin = "checkstyle")
+    apply(plugin = "pmd")
+    apply(plugin = "de.aaschmid.cpd")
+    apply(plugin = "com.github.spotbugs")
 
-spotbugs {
-    setEffort("max")
-    setReportLevel("low")
-    showProgress.set(true)
-    val excludeFile = File("${project.rootProject.projectDir}/config/spotbugs/excludes.xml")
-    if (excludeFile.exists()) {
-        excludeFilter.set(excludeFile)
+    tasks.withType<Test> {
+        ignoreFailures = true
+        useJUnitPlatform()
     }
-}
 
-tasks.withType<com.github.spotbugs.snom.SpotBugsTask> {
-    ignoreFailures = true
-    reports {
-        create("xml") {
-            enabled = true
+    spotbugs {
+        setEffort("max")
+        setReportLevel("low")
+        showProgress.set(true)
+        val excludeFile = File("${project.rootProject.projectDir}/config/spotbugs/excludes.xml")
+        if (excludeFile.exists()) {
+            excludeFilter.set(excludeFile)
         }
     }
-}
 
-pmd {
-    ruleSets = listOf()
-    ruleSetConfig = resources.text.fromFile("${project.rootProject.projectDir}/config/pmd/pmd.xml")
-    isIgnoreFailures = true
-}
-
-cpd {
-    isIgnoreFailures = true
-}
-
-tasks.withType<Cpd> {
-    reports {
-        xml.setEnabled(false)
-        text.setEnabled(true)
+    tasks.withType<com.github.spotbugs.snom.SpotBugsTask> {
+        ignoreFailures = true
+        reports {
+            create("xml") {
+                enabled = true
+            }
+        }
     }
-    language = "java"
-    minimumTokenCount = 50
-    ignoreFailures = true
-    source = sourceSets["main"].allJava
-}
 
-checkstyle {
-    isIgnoreFailures = true
+    pmd {
+        ruleSets = listOf()
+        ruleSetConfig = resources.text.fromFile("${project.rootProject.projectDir}/config/pmd/pmd.xml")
+        isIgnoreFailures = true
+    }
+
+    cpd {
+        isIgnoreFailures = true
+    }
+
+    tasks.withType<Cpd> {
+        reports {
+            xml.isEnabled = false
+            text.isEnabled = true
+        }
+        language = "java"
+        minimumTokenCount = 50
+        ignoreFailures = true
+        source = sourceSets["main"].allJava
+    }
+
+    checkstyle {
+        isIgnoreFailures = true
+    }
 }
 
 typealias QAInfoContainer = Iterable<QAInfo>
@@ -194,24 +201,21 @@ class CheckstyleQAInfoExtractor(root: org.w3c.dom.Element) : QAInfoContainer by 
 class SpotBugsQAInfoExtractor(root: org.w3c.dom.Element) : QAInfoContainer by (
     root.childNodes.let { childNodes ->
         val sourceDirs = childNodes.toIterable()
-            .filter { it.nodeName == "Project" }
-            .first()
+            .first { it.nodeName == "Project" }
             .childrenNamed("SrcDir")
-        val sourceDir = if (sourceDirs.size == 1) {
-                sourceDirs.first()
-            } else {
-                sourceDirs.find { it.textContent.endsWith("java") }
-            } ?: throw IllegalStateException("Invalid source directories: ${sourceDirs.map { it.textContent }}")
-        val sourcePath = sourceDir.textContent.trim()
+            .map { it.textContent.trim() }
         childNodes.toIterable()
             .asSequence()
             .filter { it.nodeName == "BugInstance" }
             .map { bugDescriptor ->
                 val sourceLineDescriptor = bugDescriptor.childrenNamed("SourceLine").first()
                 val category = bugDescriptor["category"].takeUnless { it == "STYLE" } ?: "UNSAFE"
+                val file = sourceDirs.asSequence()
+                    .map { "$it${File.separator}${sourceLineDescriptor["sourcepath"]}" }
+                    .first { File(it).exists() }
                 QAInfoForChecker(
                     "Potential bugs",
-                    "$sourcePath${File.separator}${sourceLineDescriptor["sourcepath"]}",
+                    file,
                     sourceLineDescriptor["start"].toInt()..sourceLineDescriptor["end"].toInt(),
                     "[$category] ${bugDescriptor.childrenNamed("LongMessage").first().textContent.trim()}",
                 )
@@ -230,53 +234,55 @@ fun org.w3c.dom.NodeList.toIterable() = Iterable {
 
 fun String.endingWith(postfix: String): String = takeIf { endsWith(postfix) } ?: "$this$postfix"
 
-tasks.register("blame") {
-    val dependencies = tasks.withType<org.gradle.api.plugins.quality.Checkstyle>() +
-            tasks.withType<org.gradle.api.plugins.quality.Pmd>() +
-            tasks.withType<com.github.spotbugs.snom.SpotBugsTask>() +
-            tasks.withType<de.aaschmid.gradle.plugins.cpd.Cpd>()
-    dependsOn(dependencies)
-    val output = "${project.buildDir}${File.separator}blame.md"
-    outputs.file(output)
-    doLast {
-        val factory = javax.xml.parsers.DocumentBuilderFactory.newInstance();
-        val xmlParser = factory.newDocumentBuilder();
-        val errors = dependencies
-            .flatMap { task -> task.outputs.files.asIterable().filter { it.exists() && it.extension == "xml" } }
-            .flatMap<File, QAInfo> {
-                val root: org.w3c.dom.Element = xmlParser.parse(it).documentElement
-                when (root.tagName) {
-                    "pmd" -> PmdQAInfoExtractor(root)
-                    "pmd-cpd" -> CpdQAInfoExtractor(root)
-                    "checkstyle" -> CheckstyleQAInfoExtractor(root)
-                    "BugCollection" -> SpotBugsQAInfoExtractor(root)
-                    else -> emptyList<QAInfo>().also { println("Unknown root type ${root.tagName}")}
+allprojects {
+    tasks.register("blame") {
+        val dependencies = tasks.withType<org.gradle.api.plugins.quality.Checkstyle>() +
+                tasks.withType<org.gradle.api.plugins.quality.Pmd>() +
+                tasks.withType<com.github.spotbugs.snom.SpotBugsTask>() +
+                tasks.withType<de.aaschmid.gradle.plugins.cpd.Cpd>()
+        dependsOn(dependencies)
+        val output = "${project.buildDir}${File.separator}blame.md"
+        outputs.file(output)
+        doLast {
+            val factory = javax.xml.parsers.DocumentBuilderFactory.newInstance();
+            val xmlParser = factory.newDocumentBuilder();
+            val errors = dependencies
+                .flatMap { task -> task.outputs.files.asIterable().filter { it.exists() && it.extension == "xml" } }
+                .flatMap<File, QAInfo> {
+                    val root: org.w3c.dom.Element = xmlParser.parse(it).documentElement
+                    when (root.tagName) {
+                        "pmd" -> PmdQAInfoExtractor(root)
+                        "pmd-cpd" -> CpdQAInfoExtractor(root)
+                        "checkstyle" -> CheckstyleQAInfoExtractor(root)
+                        "BugCollection" -> SpotBugsQAInfoExtractor(root)
+                        else -> emptyList<QAInfo>().also { println("Unknown root type ${root.tagName}")}
+                    }
                 }
-            }
-        val errorsByStudentByChecker: Map<String, Map<String, List<QAInfo>>> = errors
-            .flatMap { error -> error.blamedTo.map { it to error } }
-            .groupBy { it.first }
-            .mapValues { (_, errors) -> errors.map { it.second }.groupBy { it.checker } }
-        val report = errorsByStudentByChecker.map { (student, errors) ->
-            """
-            |# $student
-            |
-            |${errors.map { it.value.size }.sum()} violations
-            |${errors.map { (checker, violations) ->
+            val errorsByStudentByChecker: Map<String, Map<String, List<QAInfo>>> = errors
+                .flatMap { error -> error.blamedTo.map { it to error } }
+                .groupBy { it.first }
+                .mapValues { (_, errors) -> errors.map { it.second }.groupBy { it.checker } }
+            val report = errorsByStudentByChecker.map { (student, errors) ->
                 """
-                |## $checker: ${violations.size} mistakes
-                ${ violations.sortedBy { it.details }
-                    .joinToString("") {
-                        val fileName = File(it.file).name
-                        "|* ${it.details.endingWith(".")} In: $fileName@[${it.lines}]\n"
-                    }.trimEnd()
-                }
-                """
-            }.joinToString(separator = "", prefix = "", postfix = "")}
-            |
-            """.trimMargin()
-        }.joinToString(separator = "", prefix = "", postfix = "")
-        println(report)
-        file(output).writeText(report)
+                |# $student
+                |
+                |${errors.map { it.value.size }.sum()} violations
+                |${errors.map { (checker, violations) ->
+                    """
+                    |## $checker: ${violations.size} mistakes
+                    ${ violations.sortedBy { it.details }
+                        .joinToString("") {
+                            val fileName = File(it.file).name
+                            "|* ${it.details.endingWith(".")} In: $fileName@[${it.lines}]\n"
+                        }.trimEnd()
+                    }
+                    """
+                }.joinToString(separator = "", prefix = "", postfix = "")}
+                |
+                """.trimMargin()
+            }.joinToString(separator = "", prefix = "", postfix = "")
+            println(report)
+            file(output).writeText(report)
+        }
     }
 }
