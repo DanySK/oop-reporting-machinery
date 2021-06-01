@@ -87,7 +87,7 @@ allprojects {
 
     tasks.withType<Cpd> {
         reports {
-            xml.isEnabled = false
+            xml.isEnabled = true
             text.isEnabled = true
         }
         language = "java"
