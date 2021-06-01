@@ -274,6 +274,7 @@ allprojects {
                         else -> emptyList<QAInfo>().also { println("Unknown root type ${root.tagName}")}
                     }
                 }
+                .distinct()
             val errorsByStudentByChecker: Map<String, Map<String, List<QAInfo>>> = errors
                 .flatMap { error -> error.blamedTo.map { it to error } }
                 .groupBy { it.first }
