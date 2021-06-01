@@ -134,9 +134,17 @@ data class QAInfoForChecker(
     override val blamedTo: Set<String> = blamed ?: blameFor(file, lines)
 }
 
-operator fun org.w3c.dom.Node.get(attribute: String): String =
+fun org.w3c.dom.NamedNodeMap.iterator() = object : Iterator<org.w3c.dom.Node> {
+    var index = 0
+    override fun hasNext() = index < length
+    override fun next() = item(index++)
+}
+
+operator fun org.w3c.dom.Node.get(attribute: String, orElse: String? = null): String =
     attributes?.getNamedItem(attribute)?.textContent
-        ?: throw IllegalArgumentException("No attribute '$attribute' in $this")
+        ?: orElse
+        ?: throw IllegalArgumentException("No attribute '$attribute' in $this. " +
+            "Available attributes: ${attributes.iterator().asSequence().toList()}")
 
 fun org.w3c.dom.Node.childrenNamed(name: String): List<org.w3c.dom.Node> =
         childNodes.toIterable().filter { it.nodeName == name }
@@ -201,22 +209,27 @@ class CheckstyleQAInfoExtractor(root: org.w3c.dom.Element) : QAInfoContainer by 
 class SpotBugsQAInfoExtractor(root: org.w3c.dom.Element) : QAInfoContainer by (
     root.childNodes.let { childNodes ->
         val sourceDirs = childNodes.toIterable()
-            .first { it.nodeName == "Project" }
-            .childrenNamed("SrcDir")
-            .map { it.textContent.trim() }
+                .filter { it.nodeName == "Project" }
+                .first()
+                .childrenNamed("SrcDir")
+        val sourceDir = if (sourceDirs.size == 1) {
+            sourceDirs.first()
+        } else {
+            sourceDirs.find { it.textContent.endsWith("java") }
+        } ?: throw IllegalStateException("Invalid source directories: ${sourceDirs.map { it.textContent }}")
+        val sourcePath = sourceDir.textContent.trim()
         childNodes.toIterable()
             .asSequence()
             .filter { it.nodeName == "BugInstance" }
             .map { bugDescriptor ->
                 val sourceLineDescriptor = bugDescriptor.childrenNamed("SourceLine").first()
                 val category = bugDescriptor["category"].takeUnless { it == "STYLE" } ?: "UNSAFE"
-                val file = sourceDirs.asSequence()
-                    .map { "$it${File.separator}${sourceLineDescriptor["sourcepath"]}" }
-                    .first { File(it).exists() }
+                val startLine = sourceLineDescriptor["start", "0"].toInt()
+                val endLine = sourceLineDescriptor["end", Integer.MAX_VALUE.toString()].toInt()
                 QAInfoForChecker(
                     "Potential bugs",
-                    file,
-                    sourceLineDescriptor["start"].toInt()..sourceLineDescriptor["end"].toInt(),
+                    "$sourcePath${File.separator}${sourceLineDescriptor["sourcepath"]}",
+                    startLine..endLine,
                     "[$category] ${bugDescriptor.childrenNamed("LongMessage").first().textContent.trim()}",
                 )
             }
