@@ -209,26 +209,25 @@ class CheckstyleQAInfoExtractor(root: org.w3c.dom.Element) : QAInfoContainer by 
 class SpotBugsQAInfoExtractor(root: org.w3c.dom.Element) : QAInfoContainer by (
     root.childNodes.let { childNodes ->
         val sourceDirs = childNodes.toIterable()
-                .filter { it.nodeName == "Project" }
-                .first()
-                .childrenNamed("SrcDir")
-        val sourceDir = if (sourceDirs.size == 1) {
-            sourceDirs.first()
-        } else {
-            sourceDirs.find { it.textContent.endsWith("java") }
-        } ?: throw IllegalStateException("Invalid source directories: ${sourceDirs.map { it.textContent }}")
-        val sourcePath = sourceDir.textContent.trim()
+            .filter { it.nodeName == "Project" }
+            .first()
+            .childrenNamed("SrcDir")
+            .map { it.textContent.trim() }
+            .asSequence()
         childNodes.toIterable()
             .asSequence()
             .filter { it.nodeName == "BugInstance" }
             .map { bugDescriptor ->
                 val sourceLineDescriptor = bugDescriptor.childrenNamed("SourceLine").first()
                 val category = bugDescriptor["category"].takeUnless { it == "STYLE" } ?: "UNSAFE"
-                val startLine = sourceLineDescriptor["start", "0"].toInt()
+                val startLine = sourceLineDescriptor["start", "1"].toInt()
                 val endLine = sourceLineDescriptor["end", Integer.MAX_VALUE.toString()].toInt()
+                val file = sourceDirs
+                    .map { "$it${File.separator}${sourceLineDescriptor["sourcepath"]}" }
+                    .first { File(it).exists() }
                 QAInfoForChecker(
                     "Potential bugs",
-                    "$sourcePath${File.separator}${sourceLineDescriptor["sourcepath"]}",
+                    file,
                     startLine..endLine,
                     "[$category] ${bugDescriptor.childrenNamed("LongMessage").first().textContent.trim()}",
                 )
