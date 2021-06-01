@@ -123,6 +123,10 @@ fun blameFor(file: String, lines: IntRange): Set<String> =
         .commandOutput().lines()
         .flatMap { line -> authorMatch.matchEntire(line)?.destructured?.toList() ?: emptyList() }
         .toSet()
+        .takeIf { it.isNotEmpty() }
+        ?: throw IllegalStateException(
+            "Unable to assign anything with: 'git blame -L ${lines.start},${lines.endInclusive} -p $file'"
+        )
 
 data class QAInfoForChecker(
     override val checker: String,
