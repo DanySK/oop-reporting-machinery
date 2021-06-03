@@ -82,11 +82,11 @@
         <exclude name="UncommentedEmptyMethodBody" />
     </rule>
     <rule ref="category/java/errorprone.xml">
-		<exclude name="AvoidFieldNameMatchingMethodName" />
+	<exclude name="AvoidFieldNameMatchingMethodName" />
         <exclude name="AvoidLiteralsInIfCondition" />
         <exclude name="BeanMembersShouldSerialize" />
         <exclude name="DataflowAnomalyAnalysis" />
-		<exclude name="DoNotCallSystemExit" />
+	<exclude name="DoNotTerminateVM" />
         <exclude name="MissingBreakInSwitch" />
         <exclude name="NonStaticInitializer" />
         <exclude name="NullAssignment" />
@@ -96,7 +96,7 @@
     <rule ref="category/java/multithreading.xml">
         <exclude name="AvoidSynchronizedAtMethodLevel" />
         <exclude name="AvoidUsingVolatile" />
-		<exclude name="DoNotUseThreads" />
+	<exclude name="DoNotUseThreads" />
         <exclude name="UseConcurrentHashMap" />
     </rule>
     <rule ref="category/java/performance.xml">
