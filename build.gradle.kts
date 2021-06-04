@@ -231,12 +231,12 @@ class SpotBugsQAInfoExtractor(root: org.w3c.dom.Element) : QAInfoContainer by (
                 val category = bugDescriptor["category"].takeUnless { it == "STYLE" } ?: "UNSAFE"
                 val startLine = sourceLineDescriptor["start", "1"].toInt()
                 val endLine = sourceLineDescriptor["end", Integer.MAX_VALUE.toString()].toInt()
-                val file = sourceDirs
-                    .map { "$it${File.separator}${sourceLineDescriptor["sourcepath"]}" }
-                    .first { File(it).exists() }
+                val potentialFiles = sourceDirs.map { "$it${File.separator}${sourceLineDescriptor["sourcepath"]}" }
+                val actualFile = potentialFiles.firstOrNull { File(it).exists() }
+                    ?: throw IllegalStateException("None of ${potentialFiles.toList()} exists.")
                 QAInfoForChecker(
                     "Potential bugs",
-                    file,
+                    actualFile,
                     startLine..endLine,
                     "[$category] ${bugDescriptor.childrenNamed("LongMessage").first().textContent.trim()}",
                 )
