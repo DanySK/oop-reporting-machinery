@@ -149,11 +149,16 @@ fun org.w3c.dom.NamedNodeMap.iterator() = object : Iterator<org.w3c.dom.Node> {
     override fun next() = item(index++)
 }
 
-operator fun org.w3c.dom.Node.get(attribute: String, orElse: String? = null): String =
-    attributes?.getNamedItem(attribute)?.textContent
-        ?: orElse
-        ?: throw IllegalArgumentException("No attribute '$attribute' in $this. " +
-            "Available attributes: ${attributes.iterator().asSequence().toList()}")
+operator fun org.w3c.dom.Node.get(attribute: String, orElse: String): String = get(attribute) { orElse }
+
+operator fun org.w3c.dom.Node.get(
+    attribute: String,
+    onFailure: () -> String = {
+        throw IllegalArgumentException(
+            "No attribute '$attribute' in $this. Available attributes: ${attributes.iterator().asSequence().toList()}"
+        )
+    }
+): String = attributes?.getNamedItem(attribute)?.textContent ?: onFailure()
 
 fun org.w3c.dom.Node.childrenNamed(name: String): List<org.w3c.dom.Node> =
         childNodes.toIterable().filter { it.nodeName == name }
@@ -189,14 +194,14 @@ class CpdQAInfoExtractor(root: org.w3c.dom.Element) : QAInfoContainer by (
             }
             val blamed = filePaths.zip(ranges).flatMap { (file, lines) -> blameFor(file, lines) }.toSet()
             val description = "Duplication of $lines lines" +
-                    " and ${duplication["tokens"]} tokens across ${filePaths.toSet().size}" +
-                    " files: ${shortFiles.joinToString(prefix = "", postfix = "")}"
+                " and ${duplication["tokens"]} tokens across ${filePaths.toSet().size}" +
+                " files: ${shortFiles.joinToString(prefix = "", postfix = "")}"
             QAInfoForChecker(
-                    "Duplications and violations of the DRY principle",
-                    files.first()["path"],
-                    ranges.first(),
-                    description,
-                    blamed
+                "Duplications and violations of the DRY principle",
+                files.first()["path"],
+                ranges.first(),
+                description,
+                blamed
             )
         }
         .asIterable()
@@ -226,20 +231,27 @@ class SpotBugsQAInfoExtractor(root: org.w3c.dom.Element) : QAInfoContainer by (
         childNodes.toIterable()
             .asSequence()
             .filter { it.nodeName == "BugInstance" }
-            .map { bugDescriptor ->
+            .mapNotNull { bugDescriptor ->
                 val sourceLineDescriptor = bugDescriptor.childrenNamed("SourceLine").first()
                 val category = bugDescriptor["category"].takeUnless { it == "STYLE" } ?: "UNSAFE"
                 val startLine = sourceLineDescriptor["start", "1"].toInt()
                 val endLine = sourceLineDescriptor["end", Integer.MAX_VALUE.toString()].toInt()
-                val potentialFiles = sourceDirs.map { "$it${File.separator}${sourceLineDescriptor["sourcepath"]}" }
-                val actualFile = potentialFiles.firstOrNull { File(it).exists() }
-                    ?: throw IllegalStateException("None of ${potentialFiles.toList()} exists.")
-                QAInfoForChecker(
-                    "Potential bugs",
-                    actualFile,
-                    startLine..endLine,
-                    "[$category] ${bugDescriptor.childrenNamed("LongMessage").first().textContent.trim()}",
-                )
+                val actualFile = sourceLineDescriptor.get("relSourcepath") {
+                    val sourcePath = sourceLineDescriptor["sourcepath"]
+                    val potentialFiles = sourceDirs.map { "$it${File.separator}$sourcePath" }
+                    val existingCandidates = potentialFiles.filter { File(it).exists() }
+                    existingCandidates.firstOrNull() ?: "".also {
+                        logger.warn("Skipping file $sourcePath, as none of ${potentialFiles.toList()} exists")
+                    }
+                }
+                actualFile.takeIf { it.isNotBlank() }?.let {
+                    QAInfoForChecker(
+                        "Potential bugs",
+                        actualFile,
+                        startLine..endLine,
+                        "[$category] ${bugDescriptor.childrenNamed("LongMessage").first().textContent.trim()}",
+                    )
+                }
             }
             .asIterable()
     }
@@ -304,7 +316,6 @@ allprojects {
                 |
                 """.trimMargin()
             }.joinToString(separator = "", prefix = "", postfix = "")
-            println(report)
             file(output).writeText(report)
         }
     }
