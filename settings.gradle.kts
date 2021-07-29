@@ -1,4 +1,13 @@
 import org.danilopianini.VersionAliases.justAdditionalAliases
+
+plugins {
+    id("de.fayard.refreshVersions") version "0.10.1"
+}
+
+refreshVersions {
+    extraArtifactVersionKeyRules = justAdditionalAliases
+}
+
 buildscript {
     repositories {
         gradlePluginPortal()
@@ -8,13 +17,3 @@ buildscript {
         classpath("org.danilopianini:refreshversions-aliases:+")
     }
 }
-
-plugins {
-    id("de.fayard.refreshVersions") version "0.10.0"
-}
-
-refreshVersions {
-    extraArtifactVersionKeyRules = justAdditionalAliases
-}
-
-rootProject.name = "oop-reporting-machinery"
