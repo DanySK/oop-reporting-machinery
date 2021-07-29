@@ -262,7 +262,7 @@ allprojects {
                 tasks.withType<com.github.spotbugs.snom.SpotBugsTask>() +
                 tasks.withType<de.aaschmid.gradle.plugins.cpd.Cpd>()
         dependsOn(dependencies)
-        val identifier = if (project == rootProject) "" else "-${project.name}
+        val identifier = if (project == rootProject) "" else "-${project.name}"
         val output = "${project.buildDir}${File.separator}blame$identifier.md"
         outputs.file(output)
         doLast {
