@@ -5,9 +5,8 @@ on:
     branches-ignore:
       - 'autodelivery**'
       - 'bump-**'
+      - 'renovate**'
   pull_request:
-  schedule:
-    - cron: '0 3 * * SUN'
 
 jobs:
   Build:
@@ -131,20 +130,3 @@ jobs:
           name: success
       - shell: bash
         run: '[ -f ok ]'
-  Automerge:
-    needs: CI-Complete
-    runs-on: ubuntu-latest
-    if: success()
-    steps:
-      - name: automerge
-        uses: "DanySK/yaagha@master"
-        env:
-          GITHUB_TOKEN: "${{ secrets.AUTOMERGE_TOKEN }}"
-          MERGE_FORKS: "false"
-          MERGE_LABELS: "version-upgrade"
-          BLOCK_LABELS: "blocked, wontfix, invalid"
-          MERGE_METHOD: "rebase"
-          CLOSE_ON_CONFLICT: "true"
-          DELETE_BRANCH_ON_CLOSE: "true"
-          GIT_USER_NAME: "Danilo Pianini"
-          GIT_USER_EMAIL: "danilo.pianini@gmail.com"
