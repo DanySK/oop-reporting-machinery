@@ -236,14 +236,12 @@ class SpotBugsQAInfoExtractor(root: org.w3c.dom.Element) : QAInfoContainer by (
                 val category = bugDescriptor["category"].takeUnless { it == "STYLE" } ?: "UNSAFE"
                 val startLine = sourceLineDescriptor["start", "1"].toInt()
                 val endLine = sourceLineDescriptor["end", Integer.MAX_VALUE.toString()].toInt()
-                val actualFile = sourceLineDescriptor.get("relSourcepath") {
-                    val sourcePath = sourceLineDescriptor["sourcepath"]
-                    val potentialFiles = sourceDirs.map { "$it${File.separator}$sourcePath" }
-                    val existingCandidates = potentialFiles.filter { File(it).exists() }
-                    existingCandidates.firstOrNull() ?: "".also {
-                        logger.warn("Skipping file $sourcePath, as none of ${potentialFiles.toList()} exists")
-                    }
+                val candidateFile = sourceLineDescriptor.get("relSourcepath") {
+                    sourceLineDescriptor["sourcepath"]
                 }
+                val actualFile = sourceDirs.flatMap { File(it).walkTopDown() }
+                    .map { it.absolutePath }
+                    .first { candidateFile in it }
                 actualFile.takeIf { it.isNotBlank() }?.let {
                     QAInfoForChecker(
                         "Potential bugs",
