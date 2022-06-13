@@ -41,7 +41,7 @@ jobs:
         if: matrix.os == 'ubuntu'
         uses: ncipollo/release-action@v1.10.0
         with:
-          tag: steps.version.outputs.version
+          tag: ${{ steps.version.outputs.version }}
           artifacts: "**/*blame*.md"
           allowUpdates: true
           token: ${{ secrets.GITHUB_TOKEN }}
