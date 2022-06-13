@@ -34,7 +34,7 @@ jobs:
       - name: Autotag
         uses: DanySK/semver-autotag-action@0.1.0
       - name: Release
-        if: matrix.os == "ubuntu"
+        if: matrix.os == 'ubuntu'
         uses: ncipollo/release-action@v1.10.0
         with:
           artifacts: "**/*blame*.md"
