@@ -2,11 +2,8 @@ import de.aaschmid.gradle.plugins.cpd.Cpd
 
 plugins {
     java
-    checkstyle
-    pmd
-    id("de.aaschmid.cpd")
-    id("com.github.spotbugs")
-    `build-dashboard`
+    alias(libs.plugins.java.qa)
+    alias(libs.plugins.taskTree)
 }
 
 sourceSets {
@@ -38,10 +35,8 @@ repositories {
 }
 
 dependencies {
-    implementation("junit:junit:_")
-    implementation("org.junit.jupiter:junit-jupiter-api:_")
-    runtimeOnly("org.junit.jupiter:junit-jupiter-engine:_")
-    runtimeOnly("org.junit.vintage:junit-vintage-engine:_")
+    implementation(libs.bundles.junit.compile)
+    runtimeOnly(libs.bundles.junit.runtime)
     File("lib")
         .takeIf { it.exists() }
         ?.takeIf { it.isDirectory }
@@ -51,26 +46,10 @@ dependencies {
 }
 
 allprojects {
-    apply(plugin = "checkstyle")
-    apply(plugin = "pmd")
-    apply(plugin = "de.aaschmid.cpd")
-    apply(plugin = "com.github.spotbugs")
-
     tasks.withType<Test> {
         ignoreFailures = true
         useJUnitPlatform()
     }
-
-    spotbugs {
-        setEffort("max")
-        setReportLevel("low")
-        showProgress.set(true)
-        val excludeFile = File("${project.rootProject.projectDir}/config/spotbugs/excludes.xml")
-        if (excludeFile.exists()) {
-            excludeFilter.set(excludeFile)
-        }
-    }
-
     tasks.withType<com.github.spotbugs.snom.SpotBugsTask> {
         ignoreFailures = true
         reports {
@@ -79,28 +58,22 @@ allprojects {
             }
         }
     }
-
     pmd {
-        ruleSets = listOf()
-        ruleSetConfig = resources.text.fromFile("${project.rootProject.projectDir}/config/pmd/pmd.xml")
         isIgnoreFailures = true
     }
-
     cpd {
         isIgnoreFailures = true
     }
-
     tasks.withType<Cpd> {
         reports {
-            xml.isEnabled = true
-            text.isEnabled = true
+            xml.required.set(true)
+            text.required.set(true)
         }
         language = "java"
         minimumTokenCount = 50
         ignoreFailures = true
         source = sourceSets["main"].allJava
     }
-
     checkstyle {
         isIgnoreFailures = true
     }
