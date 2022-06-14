@@ -31,17 +31,20 @@ jobs:
           check-command: ./gradlew blame
           should-run-codecov: false
           should-deploy: false
-      - name: Autotag
-        uses: DanySK/semver-autotag-action@0.1.0
-      - name: Fetch Version
-        if: matrix.os == 'ubuntu'
+      - uses: paulhatch/semantic-version@v4.0.2
         id: version
-        run: echo ::set-output name=version::$(git describe)
+        with:
+          tag_prefix: ''
+          major_pattern: '/\w+(\(\w+\))?\!:\s.+/'
+          minor_pattern: '/feat(\(\w+\))?:\s.+/'
+          format: "${major}.${minor}.${patch}-dev${increment}"
+          bump_each_commit: true
+          search_commit_body: false
       - name: Release
         if: matrix.os == 'ubuntu'
         uses: ncipollo/release-action@v1.10.0
         with:
-          tag: ${{ steps.version.outputs.version }}
+          tag: ${{ steps.version.outputs.version_tag }}
           artifacts: "**/*blame*.md"
           allowUpdates: true
           token: ${{ secrets.GITHUB_TOKEN }}
