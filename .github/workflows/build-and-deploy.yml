@@ -32,6 +32,7 @@ jobs:
           should-run-codecov: false
           should-deploy: false
       - uses: paulhatch/semantic-version@v4.0.2
+        if: matrix.os == 'ubuntu'
         id: version
         with:
           tag_prefix: ''
