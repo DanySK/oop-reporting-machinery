@@ -43,7 +43,7 @@ jobs:
           search_commit_body: false
       - name: Release
         if: matrix.os == 'ubuntu'
-        uses: ncipollo/release-action@v1.11.0
+        uses: ncipollo/release-action@v1.11.1
         with:
           tag: ${{ steps.version.outputs.version_tag }}
           artifacts: "**/*blame*.md"
