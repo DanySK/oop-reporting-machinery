@@ -35,7 +35,7 @@ jobs:
         if: matrix.os == 'ubuntu'
         id: version
         with:
-          tag_prefix: ''
+          tag_prefix: 'grading'
           major_pattern: '/\w+(\(\w+\))?\!:\s.+/'
           minor_pattern: '/feat(\(\w+\))?:\s.+/'
           format: "${major}.${minor}.${patch}-dev${increment}"
