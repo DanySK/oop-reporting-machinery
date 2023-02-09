@@ -21,8 +21,11 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [windows, macos, ubuntu]
-    runs-on: ${{ matrix.os }}-latest
+        os: [ windows-2022, macos-12, ubuntu-22.04 ]
+    runs-on: ${{ matrix.os }}
+    concurrency:
+      group: ${{ github.workflow }}-build-${{ matrix.os }}-${{ github.event.number || github.ref }}
+      cancel-in-progress: true
     steps:
       - name: Checkout
         uses: DanySK/action-checkout@0.2.5
@@ -35,10 +38,11 @@ jobs:
         if: matrix.os == 'ubuntu'
         id: version
         with:
-          tag_prefix: 'grading'
+          tag_prefix: ""
           major_pattern: '/\w+(\(\w+\))?\!:\s.+/'
           minor_pattern: '/feat(\(\w+\))?:\s.+/'
-          format: "${major}.${minor}.${patch}-dev${increment}"
+          version_format: "${major}.${minor}.${patch}-dev${increment}"
+          namespace: 'grading'
           bump_each_commit: true
           search_commit_body: false
       - name: Release
@@ -49,10 +53,51 @@ jobs:
           artifacts: "**/*blame*.md"
           allowUpdates: true
           token: ${{ secrets.GITHUB_TOKEN }}
+  anti-plagiarism:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Compute the version of the detector
+        id: version
+        shell: bash
+        run: |
+          USES=$(cat <<TRICK_RENOVATE
+          - uses: DanySK/code-plagiarism-detector@6.0.2
+          TRICK_RENOVATE
+          )
+          echo "Scripts update line: \"$USES\""
+          echo "Computed version: \"${USES#*@v}\""
+          echo "version=${USES#*@v}" >> $GITHUB_OUTPUT
+      - name: Download
+        run: curl -sL https://github.com/DanySK/code-plagiarism-detector/releases/download/${{ steps.version.outputs.version }}/code-plagiarism-detector-${{ steps.version.outputs.version }}-all.jar -o plagiarism.jar
+      - name: Run
+        env:
+          BB_USER: danysk
+          BB_TOKEN: ${{ secrets.BB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p plagiarism-report
+          java -jar plagiarism.jar --output-dir plagiarism-report \
+            submission \
+              --service github \
+              --user ${{ github.repository_owner }} \
+              --repository-name ${{ github.event.repository.name }} \
+            corpus \
+              --service github,bitbucket \
+              --user unibo-oop-projects,danysk,AlmasB,oakes \
+              --repository-name oop,student,FXGLGames,libgdx-examples \
+      - name: Release
+        if: matrix.os == 'ubuntu'
+        uses: ncipollo/release-action@v1.12.0
+        with:
+          tag: ${{ steps.version.outputs.version_tag }}
+          artifacts: "plagiarism-report/*"
+          allowUpdates: true
+          token: ${{ secrets.GITHUB_TOKEN }}
   ci-success:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs:
       - build
+      - anti-plagiarism
     if: >-
       always() && (
         contains(join(needs.*.result, ','), 'failure')
