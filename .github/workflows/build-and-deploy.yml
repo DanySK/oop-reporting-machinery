@@ -65,8 +65,8 @@ jobs:
           TRICK_RENOVATE
           )
           echo "Scripts update line: \"$USES\""
-          echo "Computed version: \"${USES#*@v}\""
-          echo "version=${USES#*@v}" >> $GITHUB_OUTPUT
+          echo "Computed version: \"${USES#*@}\""
+          echo "version=${USES#*@}" >> $GITHUB_OUTPUT
       - name: Download
         run: curl -sL https://github.com/DanySK/code-plagiarism-detector/releases/download/${{ steps.version.outputs.version }}/code-plagiarism-detector-${{ steps.version.outputs.version }}-all.jar -o plagiarism.jar
       - name: Run
