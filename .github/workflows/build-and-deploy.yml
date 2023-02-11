@@ -18,11 +18,32 @@ on:
   workflow_dispatch:
 
 jobs:
+  version:
+    runs-on: ubuntu-22.04
+    outputs:
+       version_tag: ${{ steps.version.outputs.version_tag }}
+    steps:
+      - name: Checkout
+        uses: DanySK/action-checkout@0.2.5
+      - uses: paulhatch/semantic-version@v5.0.3
+        id: version
+        with:
+          tag_prefix: ""
+          major_pattern: '/\w+(\(\w+\))?\!:\s.+/'
+          minor_pattern: '/feat(\(\w+\))?:\s.+/'
+          version_format: "${major}.${minor}.${patch}-dev${increment}"
+          namespace: 'grading'
+          bump_each_commit: true
+          search_commit_body: false
+      - run: echo '${{ steps.version.outputs.version_tag }}'
+      - run: '[ -n "${{ steps.version.outputs.version_tag }}" ]'
   build:
     strategy:
       matrix:
         os: [ windows-2022, macos-12, ubuntu-22.04 ]
     runs-on: ${{ matrix.os }}
+    needs:
+      - version
     concurrency:
       group: ${{ github.workflow }}-build-${{ matrix.os }}-${{ github.event.number || github.ref }}
       cancel-in-progress: true
@@ -34,27 +55,18 @@ jobs:
           check-command: ./gradlew blame
           should-run-codecov: false
           should-deploy: false
-      - uses: paulhatch/semantic-version@v5.0.3
-        if: matrix.os == 'ubuntu'
-        id: version
-        with:
-          tag_prefix: ""
-          major_pattern: '/\w+(\(\w+\))?\!:\s.+/'
-          minor_pattern: '/feat(\(\w+\))?:\s.+/'
-          version_format: "${major}.${minor}.${patch}-dev${increment}"
-          namespace: 'grading'
-          bump_each_commit: true
-          search_commit_body: false
       - name: Release
-        if: matrix.os == 'ubuntu'
+        if: contains('Linux', runner.os)
         uses: ncipollo/release-action@v1.12.0
         with:
-          tag: ${{ steps.version.outputs.version_tag }}
+          tag: ${{ needs.version.outputs.version_tag }}
           artifacts: "**/*blame*.md"
           allowUpdates: true
           token: ${{ secrets.GITHUB_TOKEN }}
   anti-plagiarism:
     runs-on: ubuntu-22.04
+    needs:
+      - version
     steps:
       - name: Compute the version of the detector
         id: version
@@ -86,10 +98,10 @@ jobs:
               --user unibo-oop-projects,danysk,AlmasB,oakes \
               --repository-name oop,student,FXGLGames,libgdx-examples \
       - name: Release
-        if: matrix.os == 'ubuntu'
+        if: contains('Linux', runner.os)
         uses: ncipollo/release-action@v1.12.0
         with:
-          tag: ${{ steps.version.outputs.version_tag }}
+          tag: ${{ needs.version.outputs.version_tag }}
           artifacts: "plagiarism-report/*"
           allowUpdates: true
           token: ${{ secrets.GITHUB_TOKEN }}
