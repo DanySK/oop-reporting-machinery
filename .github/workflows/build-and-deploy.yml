@@ -104,7 +104,7 @@ jobs:
           artifacts: "plagiarism-report/*"
           allowUpdates: true
           token: ${{ secrets.GITHUB_TOKEN }}
-  ci-success:
+  success:
     runs-on: ubuntu-22.04
     needs:
       - build
