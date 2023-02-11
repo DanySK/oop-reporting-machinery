@@ -4,6 +4,14 @@ on:
   workflow_dispatch:
 
 jobs:
+  branch:
+    runs-on: ubuntu-22.04
+    outputs:
+      is_default: ${{ steps.branch-name.outputs.is_default }}
+    steps:
+      - name: Get branch name
+        id: branch-name
+        uses: tj-actions/branch-names@v6
   version:
     runs-on: ubuntu-22.04
     outputs:
@@ -29,6 +37,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     needs:
       - version
+      - branch
     concurrency:
       group: ${{ github.workflow }}-build-${{ matrix.os }}-${{ github.event.number || github.ref }}
       cancel-in-progress: true
@@ -41,7 +50,7 @@ jobs:
           should-run-codecov: false
           should-deploy: false
       - name: Release
-        if: contains('Linux', runner.os)
+        if: contains('Linux', runner.os) && needs.branch.outputs.is_default
         uses: ncipollo/release-action@v1.12.0
         with:
           tag: ${{ needs.version.outputs.version_tag }}
@@ -52,6 +61,7 @@ jobs:
     runs-on: ubuntu-22.04
     needs:
       - version
+      - branch
     steps:
       - name: Compute the version of the detector
         id: version
@@ -79,7 +89,7 @@ jobs:
             corpus \
               --service github:unibo-oop-projects,bitbucket:danysk/oop,github:AlmasB/FXGLGames,github:oakes/libgdx-examples
       - name: Release
-        if: contains('Linux', runner.os)
+        if: needs.branch.outputs.is_default
         uses: ncipollo/release-action@v1.12.0
         with:
           tag: ${{ needs.version.outputs.version_tag }}
