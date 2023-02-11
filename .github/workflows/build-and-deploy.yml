@@ -63,6 +63,9 @@ jobs:
     needs:
       - version
       - branch
+    concurrency:
+      group: ${{ github.workflow }}-anti-plagiarism-${{ github.event.number || github.ref }}
+      cancel-in-progress: true
     steps:
       - name: Compute the version of the detector
         id: version
