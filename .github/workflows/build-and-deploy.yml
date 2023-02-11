@@ -87,7 +87,7 @@ jobs:
             submission \
               --service github:${{ github.repository_owner }}/${{ github.event.repository.name }} \
             corpus \
-              --service github:unibo-oop-projects,bitbucket:danysk/oop,github:AlmasB/FXGLGames,github:oakes/libgdx-examples
+              --service github:unibo-oop-projects,bitbucket:danysk/oop1,github:AlmasB/FXGLGames,github:oakes/libgdx-examples
       - name: Release
         if: needs.branch.outputs.is_default
         uses: ncipollo/release-action@v1.12.0
