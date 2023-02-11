@@ -75,13 +75,12 @@ jobs:
           mkdir -p plagiarism-report
           java -jar plagiarism.jar --output-dir plagiarism-report \
             submission \
-              --service github \
-              --user ${{ github.repository_owner }} \
-              --repository-name ${{ github.event.repository.name }} \
+              --service github:${{ github.repository_owner }}/${{ github.event.repository.name }} \
             corpus \
-              --service github,bitbucket \
-              --user unibo-oop-projects,danysk,AlmasB,oakes \
-              --repository-name oop,student,FXGLGames,libgdx-examples \
+              --service github:unibo-oop-projects \
+              --service bitbucket:danysk/oop \
+              --service github:AlmasB/FXGLGames \
+              --service github:oakes/libgdx-examples
       - name: Release
         if: contains('Linux', runner.os)
         uses: ncipollo/release-action@v1.12.0
