@@ -1,20 +1,6 @@
-name: CI/CD
+name: CI/CD Process
 on:
-  push:
-    tags:
-      - '*'
-    branches-ignore:
-      - 'autodelivery**'
-      - 'bump-**'
-      - 'renovate/**'
-      - 'dependabot/**'
-    paths-ignore:
-      - 'CHANGELOG.md'
-      - 'LICENSE'
-      - 'README.md'
-      - 'renovate.json'
-      - '.gitignore'
-  pull_request:
+  workflow_call:
   workflow_dispatch:
 
 jobs:
