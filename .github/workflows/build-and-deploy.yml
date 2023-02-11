@@ -35,7 +35,6 @@ jobs:
           namespace: 'grading'
           bump_each_commit: true
           search_commit_body: false
-      - run: echo '${{ steps.version.outputs.version_tag }}'
       - run: '[ -n "${{ steps.version.outputs.version_tag }}" ]'
   build:
     strategy:
