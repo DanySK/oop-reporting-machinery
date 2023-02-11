@@ -56,6 +56,7 @@ jobs:
           tag: ${{ needs.version.outputs.version_tag }}
           artifacts: "**/*blame*.md"
           allowUpdates: true
+          replacesArtifacts: true
           token: ${{ secrets.GITHUB_TOKEN }}
   anti-plagiarism:
     runs-on: ubuntu-22.04
@@ -95,6 +96,7 @@ jobs:
           tag: ${{ needs.version.outputs.version_tag }}
           artifacts: "plagiarism-report/*"
           allowUpdates: true
+          replacesArtifacts: true
           token: ${{ secrets.GITHUB_TOKEN }}
   success:
     runs-on: ubuntu-22.04
