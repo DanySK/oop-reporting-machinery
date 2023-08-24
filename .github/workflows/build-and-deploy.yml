@@ -53,7 +53,7 @@ jobs:
           should-deploy: false
       - name: Release
         if: contains('Linux', runner.os) && needs.branch.outputs.is_default
-        uses: ncipollo/release-action@v1.12.0
+        uses: ncipollo/release-action@v1.13.0
         with:
           tag: ${{ needs.version.outputs.version_tag }}
           artifacts: "**/*blame*.md"
@@ -96,7 +96,7 @@ jobs:
               --service github:unibo-oop-projects,bitbucket:danysk/oop1,github:AlmasB/FXGLGames,github:oakes/libgdx-examples,github:aricci303/game-as-a-lab
       - name: Release
         if: needs.branch.outputs.is_default
-        uses: ncipollo/release-action@v1.12.0
+        uses: ncipollo/release-action@v1.13.0
         with:
           tag: ${{ needs.version.outputs.version_tag }}
           artifacts: "plagiarism-report/*"
