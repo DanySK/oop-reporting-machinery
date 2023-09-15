@@ -45,7 +45,7 @@ jobs:
     steps:
       - name: Checkout
         uses: DanySK/action-checkout@0.2.12
-      - uses: DanySK/build-check-deploy-gradle-action@2.2.8
+      - uses: DanySK/build-check-deploy-gradle-action@2.2.9
         with:
           build-command: ./gradlew test || true
           check-command: ./gradlew blame
