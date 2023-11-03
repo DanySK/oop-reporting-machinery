@@ -22,6 +22,8 @@ jobs:
     steps:
       - run: 'true'
   ci-cd:
+    permissions:
+      contents: write
     needs:
       - dispatcher
     uses: ./.github/workflows/build-and-deploy.yml
