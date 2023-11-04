@@ -51,8 +51,8 @@ jobs:
           (curl https://raw.githubusercontent.com/arzzen/git-quick-stats/master/git-quick-stats | bash -s -- -T) > git-stats.txt
       - uses: DanySK/build-check-deploy-gradle-action@2.2.10
         with:
-          build-command: ./gradlew test || true
-          check-command: ./gradlew blame
+          build-command: ./gradlew blame
+          check-command: ./gradlew test blame || true
           should-run-codecov: false
           should-deploy: false
           java-version: 17
