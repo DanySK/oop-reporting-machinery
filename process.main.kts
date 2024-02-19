@@ -108,7 +108,11 @@ val fork: GHRepository = generateSequence(repo) { it.parent }
 val workdir: File = createTempDirectory().toFile()
 
 println("Working directory: ${workdir.absolutePath}. Cloning...")
-println(shellRun { command("git", listOf("clone", fork.sshUrl, workdir.absolutePath)) })
+val url: String = when {
+    System.getenv("CI")?.toBoolean() == true -> fork.httpTransportUrl
+    else -> fork.sshUrl
+}
+println(shellRun { command("git", listOf("clone", url, workdir.absolutePath)) })
 
 /*
 * Apply the QA plugin
