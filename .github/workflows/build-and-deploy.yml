@@ -1,0 +1,12 @@
+name: CI/CD Process
+on:
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  success:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.1.1
+      - run: ./process.main.kts unibo-oop-projects/OOP23-LucaFerar-Soprnzetti-Vdamianob-Velli-wulf
