@@ -42,20 +42,39 @@ val year = now.format(DateTimeFormatter.ofPattern("yy")).toInt().let {
  */
 val github: GitHub = GitHubBuilder().withOAuthToken(token).build()
 val repo = requireNotNull(github.getRepository(args[0]))
+val disallowedRepoChars = Regex("""[^(\w|\-\.)]""")
+val knownNotAuthors = listOf(
+    "@github.com",
+    "[bot]@users.noreply.github.com",
+    "danilo.pianini@unibo.it",
+    "danilo.pianini@gmail.com",
+    "nicco.mlt@gmail.com",
+    "robyonrails@gmail.com",
+)
 fun createFork(): GHRepository {
     println("Computing author names")
     val committers = repo.listCommits()
-        .mapNotNullTo(mutableSetOf()) { it.commitShortInfo.committer.name }
         .asSequence()
-        .filterNot { it == "GitHub" }
+        .map { it.commitShortInfo.author }
+        .map { it.name to it.email}
+        .distinct()
+        .filter { (name, email) ->
+            knownNotAuthors.none { email.endsWith(it) }.also {
+                println("$name -> $email is kept? $it")
+            }
+        }
+        .map { it.first }
         .map { it.split(Regex("\\s+|_+|-+")).lastOrNull() ?: it }
-        .map { it.replaceRange(0..0, it[0].toTitleCase().toString()) }
+        .map { it.replaceRange(0..0, it[0].titlecaseChar().toString()) }
         .sorted()
         .toList()
         .takeUnless { it.isEmpty() }
         ?: listOf("Unknown")
     println("Author names: ${committers.joinToString(separator = ", ")}")
-    val newName = "OOP$year-${committers.joinToString(separator = "-")}-$acronym"
+    val filteredAuthors = committers.map { it.replace(disallowedRepoChars, "") }
+    println("Filtered author names: $filteredAuthors")
+    val authorNames = filteredAuthors.joinToString(separator = "-")
+    val newName = "OOP$year-$authorNames-$acronym"
     println("Fork name: $newName")
     val targetOrganization = requireNotNull(github.getOrganization(targetOrganizationName))
     require(targetOrganization.getRepository(newName) == null) {
@@ -64,9 +83,14 @@ fun createFork(): GHRepository {
     println("Forking ${repo.fullName} to $targetOrganizationName")
     val fork = repo.forkTo(targetOrganization)
     println("forked to ${fork.name}")
-    fork.renameTo(newName)
-    println("fork renamed to $newName")
-    return targetOrganization.getRepository(newName)
+    return when {
+        fork.isArchived -> fork
+        else -> {
+            fork.renameTo(newName)
+            println("fork renamed to $newName")
+            targetOrganization.getRepository(newName)
+        }
+    }
 }
 val fork = repo.listForks().find { it.ownerName == targetOrganizationName }?.also {
     println("Fork already exists: skipping fork")
@@ -111,7 +135,7 @@ val projectSettings = File(workdir, "settings.gradle.kts")
 projectSettings.writeText("rootProject.name = \"oop-$year-$acronym\"\n$settings")
 
 // Add the CI process
-File(".github").copyRecursively(workdir.resolve(".github"), overwrite = true)
+File("workflows").copyRecursively(workdir.resolve(".github/workflows"), overwrite = true)
 
 // Make sure gradlew is executable
 File(workdir, "gradlew").setExecutable(true)
