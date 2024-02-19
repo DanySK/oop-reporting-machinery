@@ -9,4 +9,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4.1.1
-      - run: ./process.main.kts unibo-oop-projects/OOP23-LucaFerar-Soprnzetti-Vdamianob-Velli-wulf
+      - name: Run on existing repository
+        env:
+          GITHUB_TOKEN: ${{ secrets.AUTOMERGE_TOKEN }}
+        run: ./process.main.kts unibo-oop-projects/OOP23-LucaFerar-Soprnzetti-Vdamianob-Velli-wulf
