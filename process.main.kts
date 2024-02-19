@@ -92,16 +92,23 @@ fun createFork(): GHRepository {
         }
     }
 }
-val fork = repo.listForks().find { it.ownerName == targetOrganizationName }?.also {
-    println("Fork already exists: skipping fork")
-    it.update()
-} ?: createFork()
+
+val fork: GHRepository = generateSequence(repo) { it.parent }
+    .flatMap { it.listForks() }
+    .find { it.ownerName == targetOrganizationName }
+    ?.also {
+        println("Fork already exists: skipping fork and updating instead")
+        it.update()
+    }
+    ?: createFork()
 
 /*
  * Clone the fork
  */
 val workdir: File = createTempDirectory().toFile()
-shellRun { command("git", listOf("clone", fork.sshUrl, workdir.absolutePath)) }
+
+println("Working directory: ${workdir.absolutePath}. Cloning...")
+println(shellRun { command("git", listOf("clone", fork.sshUrl, workdir.absolutePath)) })
 
 /*
 * Apply the QA plugin
@@ -140,13 +147,15 @@ File("workflows").copyRecursively(workdir.resolve(".github/workflows"), overwrit
 // Make sure gradlew is executable
 File(workdir, "gradlew").setExecutable(true)
 
-
 // Push the changes
 shellRun {
-    fun git(vararg command: String) = command("git", listOf("-C", workdir.absolutePath, *command))
+    fun git(vararg command: String) = command("git", listOf("-C", workdir.absolutePath, *command)).also { println(it) }
     git("shortlog", "-sn", "--all")
     git("add", ".")
-    git("commit", "-m", "ci: add the OOP machinery")
-    git("push")
+    if ("nothing to commit" !in git("status")) {
+        git("commit", "-m", "ci: add the OOP machinery")
+        git("push")
+    } else {
+        "No changes to commit"
+    }
 }
-println(workdir.absolutePath)
