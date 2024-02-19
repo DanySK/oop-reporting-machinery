@@ -66,6 +66,7 @@ fun createFork(): GHRepository {
         .map { it.first }
         .map { it.split(Regex("\\s+|_+|-+")).lastOrNull() ?: it }
         .map { it.replaceRange(0..0, it[0].titlecaseChar().toString()) }
+        .distinct()
         .sorted()
         .toList()
         .takeUnless { it.isEmpty() }
@@ -74,7 +75,8 @@ fun createFork(): GHRepository {
     val filteredAuthors = committers.map { it.replace(disallowedRepoChars, "") }
     println("Filtered author names: $filteredAuthors")
     val authorNames = filteredAuthors.joinToString(separator = "-")
-    val newName = "OOP$year-$authorNames-$acronym"
+    // Maximum 100 chars allowed in GitHub
+    val newName = "OOP$year-$authorNames-$acronym".take(100)
     println("Fork name: $newName")
     val targetOrganization = requireNotNull(github.getOrganization(targetOrganizationName))
     require(targetOrganization.getRepository(newName) == null) {
