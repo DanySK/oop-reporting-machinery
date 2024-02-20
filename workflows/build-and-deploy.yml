@@ -103,7 +103,7 @@ jobs:
             submission \
               --service github:${{ github.repository_owner }}/${{ github.event.repository.name }} \
             corpus \
-              --service github:unibo-oop-projects,bitbucket:danysk/oop1,github:AlmasB/FXGLGames,github:DanySK/libgdx-examples,github:aricci303/game-as-a-lab
+              --service github:unibo-oop-projects,bitbucket:danysk/oop1,github:AlmasB/FXGLGames,github:DanySK/libgdx-examples,github:aricci303/game-as-a-lab,github:pslab-unibo/oop-game
       - name: Release
         if: needs.branch.outputs.is_default
         uses: ncipollo/release-action@v1.13.0
