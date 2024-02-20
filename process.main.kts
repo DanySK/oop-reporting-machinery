@@ -50,6 +50,7 @@ val repo = requireNotNull(github.getRepository(args[0]))
 val disallowedRepoChars = Regex("""[^(\w|\-\.)]""")
 val knownNotAuthors = listOf(
     "@github.com",
+    "@users.noreply.github.com",
     "[bot]@users.noreply.github.com",
     "danilo.pianini@unibo.it",
     "danilo.pianini@gmail.com",
