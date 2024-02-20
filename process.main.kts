@@ -179,3 +179,8 @@ shellRun {
         "No changes to commit"
     }
 }
+
+val ideaCommand = "intellij-idea-ultimate-edition ${workdir.absolutePath}"
+kotlin.runCatching {
+    Runtime.getRuntime().exec(ideaCommand)
+}.onFailure { println(ideaCommand) }
