@@ -71,7 +71,7 @@ fun createFork(): GHRepository {
         }
         .map { it.first }
         .map {
-            val names = it.split(Regex("(\\s|_|-\\.)+"))
+            val names = it.split(Regex("(\\s|_|-|\\.)+"))
             names.joinToString(separator = "") { name ->
                 name.replace(disallowedRepoChars, "")
                     .replaceRange(0..0, name[0].titlecaseChar().toString())
