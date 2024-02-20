@@ -13,10 +13,13 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Properties
 import kotlin.io.path.createTempDirectory
+import kotlin.math.ceil
+import kotlin.math.max
 
 val token = System.getenv()["GITHUB_TOKEN"]
 val targetOrganizationName = "unibo-oop-projects"
 val surnameRegex = Regex(".*?(\\w)+.*?$")
+val projectNameRegex = Regex("""(\w|\.|-)+/[Oo]{2}[Pp]-?\d+-?((\w|-|\.)+)""")
 require(!token.isNullOrBlank()) {
     println("GITHUB_TOKEN is not set")
 }
@@ -27,7 +30,9 @@ require(args.size == 1) {
 /**
  * Actual project ame
  */
-val acronym = args[0].substringAfterLast("-")
+val acronym = args[0].let {
+    projectNameRegex.matchEntire(it)?.groupValues?.get(2) ?: it.substringAfterLast("-")
+}
 val now: LocalDateTime = LocalDateTime.now()
 val month = now.format(DateTimeFormatter.ofPattern("MM")).toInt()
 val year = now.format(DateTimeFormatter.ofPattern("yy")).toInt().let {
@@ -64,19 +69,27 @@ fun createFork(): GHRepository {
             }
         }
         .map { it.first }
-        .map { it.split(Regex("\\s+|_+|-+")).lastOrNull() ?: it }
-        .map { it.replaceRange(0..0, it[0].titlecaseChar().toString()) }
+        .map {
+            val names = it.split(Regex("(\\s|_|-\\.)+"))
+            names.joinToString(separator = "") { name ->
+                name.replace(disallowedRepoChars, "")
+                    .replaceRange(0..0, name[0].titlecaseChar().toString())
+            }
+        }
         .distinct()
         .sorted()
         .toList()
         .takeUnless { it.isEmpty() }
         ?: listOf("Unknown")
     println("Author names: ${committers.joinToString(separator = ", ")}")
-    val filteredAuthors = committers.map { it.replace(disallowedRepoChars, "") }
-    println("Filtered author names: $filteredAuthors")
+    fun makeRepoName(authorNames: String) = "OOP$year-${authorNames}-$acronym"
+    val maxCharsForAuthors = 100 - makeRepoName("").length - committers.size
+    val charsToDiscard = max(0, committers.sumOf { it.length } - maxCharsForAuthors)
+    val charsToDiscardPerEntry = ceil(charsToDiscard.toDouble() / committers.size).toInt()
+    val filteredAuthors = committers.map { it.take(it.length - charsToDiscardPerEntry) }
     val authorNames = filteredAuthors.joinToString(separator = "-")
     // Maximum 100 chars allowed in GitHub
-    val newName = "OOP$year-$authorNames-$acronym".take(100)
+    val newName = "OOP$year-${authorNames.take(100)}-$acronym"
     println("Fork name: $newName")
     val targetOrganization = requireNotNull(github.getOrganization(targetOrganizationName))
     require(targetOrganization.getRepository(newName) == null) {
