@@ -45,6 +45,9 @@ jobs:
       group: ${{ github.workflow }}-build-${{ matrix.os }}-${{ github.event.number || github.ref }}
       cancel-in-progress: true
     steps:
+      - name: Support longpaths
+        if: runner.os == 'Windows'
+        run: git config --system core.longpaths true
       - name: Checkout
         uses: DanySK/action-checkout@0.2.14
       - run: |
