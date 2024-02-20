@@ -123,9 +123,12 @@ val fork: GHRepository = generateSequence(repo) { it.parent }
  */
 val workdir: File = createTempDirectory().toFile()
 
+// Detect if we are running in CI
+val isInCI = System.getenv("CI")?.toBoolean() == true
+
 println("Working directory: ${workdir.absolutePath}. Cloning...")
 val url: String = when {
-    System.getenv("CI")?.toBoolean() == true -> fork.httpTransportUrl
+    isInCI -> fork.httpTransportUrl
     else -> fork.sshUrl
 }
 println(shellRun { command("git", listOf("clone", url, workdir.absolutePath)) })
@@ -174,7 +177,11 @@ shellRun {
     git("add", ".")
     if ("nothing to commit" !in git("status")) {
         git("commit", "-m", "ci: add the OOP machinery")
-        git("push")
+        if (isInCI) { 
+            "Push disabled in CI"
+        } else {
+            git("push")
+        }
     } else {
         "No changes to commit"
     }
