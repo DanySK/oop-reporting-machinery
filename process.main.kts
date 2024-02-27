@@ -144,6 +144,7 @@ val (pluginId, pluginVersion) = Regex("""oop\s*=\s*\"((?:\w|\.|-)+):(\d+\.\d+\.\
     .destructured
 val buildFile = workdir.resolve("build.gradle.kts")
 val build = buildFile.readText()
+val pluginLine: String = "id(\"$pluginId\") version \"$pluginVersion\""
 if (pluginId !in build) {
     val pluginRegex = Regex("""\s*plugins\s*\{(.*?)\}""", RegexOption.DOT_MATCHES_ALL)
     val pluginMatch = requireNotNull(pluginRegex.find(build)) {
@@ -152,11 +153,14 @@ if (pluginId !in build) {
     val pluginContent = pluginMatch.groupValues[1]
     val newPlugins = build.replace(
         pluginRegex,
-        "\nplugins {$pluginContent\n    id(\"$pluginId\") version \"$pluginVersion\"\n}\n",
+        "\nplugins {$pluginContent\n    $pluginLine}\n",
     )
     val javaVersion = Properties().apply { load(File("gradle.properties").inputStream()) }["java.version"]
     checkNotNull(javaVersion) { "No java.version in gradle.properties" }
     buildFile.writeText("$newPlugins\n java { toolchain { languageVersion.set(JavaLanguageVersion.of($javaVersion)) } }")
+} else {
+    val newBuild = build.replace(Regex("""id\s*\(\s*\"$pluginId\"\s*\)\s*version\s*\".*?\""""), pluginLine)
+    buildFile.writeText(newBuild)
 }
 
 // 3. prepare a settings file
@@ -177,7 +181,7 @@ shellRun {
     git("add", ".")
     if ("nothing to commit" !in git("status")) {
         git("commit", "-m", "ci: add the OOP machinery")
-        if (isInCI) { 
+        if (isInCI) {
             "Push disabled in CI"
         } else {
             git("push")
