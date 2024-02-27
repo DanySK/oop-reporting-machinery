@@ -70,6 +70,7 @@ fun createFork(): GHRepository {
             }
         }
         .map { it.first }
+        .filter { it.isNotBlank() }
         .map {
             val names = it.split(Regex("(\\s|_|-|\\.)+"))
             names.joinToString(separator = "") { name ->
