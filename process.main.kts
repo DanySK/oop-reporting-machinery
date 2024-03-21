@@ -1,7 +1,7 @@
 #!/usr/bin/env kotlin
 
 @file:Repository("https://repo.maven.apache.org/maven2/")
-@file:DependsOn("org.kohsuke:github-api:1.320")
+@file:DependsOn("org.kohsuke:github-api:1.321")
 @file:DependsOn("com.lordcodes.turtle:turtle:0.9.0")
 
 import com.lordcodes.turtle.shellRun
