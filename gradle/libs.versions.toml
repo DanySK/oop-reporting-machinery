@@ -1,2 +1,2 @@
 [plugins]
-oop = "org.danilopianini.unibo-oop-gradle-plugin:1.0.9"
+oop = "org.danilopianini.unibo-oop-gradle-plugin:1.0.10"
