@@ -69,15 +69,17 @@ fun createFork(): GHRepository {
                 println("$name -> $email is kept? $it")
             }
         }
-        .map { it.first }
-        .filter { it.isNotBlank() }
-        .map {
-            val names = it.split(Regex("(\\s|_|-|\\.)+"))
+        .map { it.first } // author
+        .map { fullName ->
+            val names = fullName.split(Regex("(\\s|_|-|\\.)+"))
             names.joinToString(separator = "") { name ->
                 name.replace(disallowedRepoChars, "")
-                    .replaceRange(0..0, name[0].titlecaseChar().toString())
+                    .takeIf { it.isNotBlank() }
+                    ?.replaceRange(0..0, name[0].titlecaseChar().toString())
+                    .orEmpty()
             }
         }
+        .filter { it.isNotBlank() }
         .distinct()
         .sorted()
         .toList()
