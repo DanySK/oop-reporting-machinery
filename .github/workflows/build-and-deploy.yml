@@ -13,6 +13,13 @@ jobs:
         run: |
           git config --global user.name "Danilo Pianini"
           git config --global user.email "danilo.pianini@unibo.it"
+      - name: fetch the java version
+        id: java-version
+        run: echo "java-version=$(grep 'FROM eclipse-temurin' < Dockerfile | sed 's/FROM eclipse-temurin://')" >> $GITHUB_OUTPUT
+      - uses: actions/setup-java@v4.2.1
+        with:
+          distribution: 'temurin'
+          java-version: ${{ steps.java-version.outputs.java-version }}
       - name: Run on existing repository
         env:
           GITHUB_TOKEN: ${{ secrets.AUTOMERGE_TOKEN }}
