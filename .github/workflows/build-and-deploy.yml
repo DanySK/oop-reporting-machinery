@@ -20,7 +20,9 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: ${{ steps.java-version.outputs.java-version }}
-      - name: Run on existing repository
+      - name: Run on existing projects
         env:
           GITHUB_TOKEN: ${{ secrets.AUTOMERGE_TOKEN }}
-        run: ./process.main.kts unibo-oop-projects/OOP23-LucaFerar-Soprnzetti-Vdamianob-Velli-wulf
+        run: |
+          ./process.main.kts unibo-oop-projects/OOP23-LucaFerar-Soprnzetti-Vdamianob-Velli-wulf
+          ./process.main.kts unibo-oop-projects/OOP23-ChristianRemschiC-GiorgiaPateraGior-ClaudiuRemschi-GiorgiaPatera-JagoCamoni-Unknown-GrubClash

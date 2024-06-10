@@ -11,10 +11,8 @@ import org.kohsuke.github.GitHubBuilder
 import java.io.File
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.util.Properties
+import java.util.*
 import kotlin.io.path.createTempDirectory
-import kotlin.math.ceil
-import kotlin.math.max
 
 val token = System.getenv()["GITHUB_TOKEN"]
 val targetOrganizationName = "unibo-oop-projects"
@@ -88,9 +86,11 @@ fun createFork(): GHRepository {
     println("Author names: ${committers.joinToString(separator = ", ")}")
     fun makeRepoName(authorNames: String) = "OOP$year-${authorNames}-$acronym"
     val maxCharsForAuthors = 100 - makeRepoName("").length - committers.size
-    val charsToDiscard = max(0, committers.sumOf { it.length } - maxCharsForAuthors)
-    val charsToDiscardPerEntry = ceil(charsToDiscard.toDouble() / committers.size).toInt()
-    val filteredAuthors = committers.map { it.take(it.length - charsToDiscardPerEntry) }
+    val filteredAuthors = committers.toMutableList()
+    repeat(committers.sumOf { it.length } - maxCharsForAuthors) {
+        filteredAuthors.sortBy { -it.length }
+        filteredAuthors[0] = filteredAuthors[0].dropLast(1)
+    }
     val authorNames = filteredAuthors.joinToString(separator = "-")
     // Maximum 100 chars allowed in GitHub
     val newName = "OOP$year-${authorNames.take(100)}-$acronym"
