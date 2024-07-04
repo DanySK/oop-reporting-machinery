@@ -181,6 +181,7 @@ File(workdir, "gradlew").setExecutable(true)
 shellRun {
     fun git(vararg command: String) = command("git", listOf("-C", workdir.absolutePath, *command)).also { println(it) }
     git("shortlog", "-sn", "--all")
+    git("add", "-f", ".github/workflows")
     git("add", ".")
     if ("nothing to commit" !in git("status")) {
         git("commit", "-m", "ci: add the OOP machinery")
