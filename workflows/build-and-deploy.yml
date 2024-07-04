@@ -86,7 +86,7 @@ jobs:
         shell: bash
         run: |
           USES=$(cat <<TRICK_RENOVATE
-          - uses: DanySK/code-plagiarism-detector@8.1.10
+          - uses: DanySK/code-plagiarism-detector@9.0.0
           TRICK_RENOVATE
           )
           echo "Scripts update line: \"$USES\""
