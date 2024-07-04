@@ -3,7 +3,7 @@
   "extends": [
     "github>DanySK/renovate-config"
   ],
-  "github-action": {
+  "github-actions": {
     "fileMatch": ["^workflows/.+\\.ya?ml$"]
   }
 }
