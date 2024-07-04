@@ -154,13 +154,14 @@ if (pluginId !in build) {
         "No plugins found in $buildFile"
     }
     val pluginContent = pluginMatch.groupValues[1]
-    val newPlugins = build.replace(
-        pluginRegex,
-        "\nplugins {$pluginContent\n    $pluginLine}\n",
-    )
     val javaVersion = Properties().apply { load(File("gradle.properties").inputStream()) }["java.version"]
     checkNotNull(javaVersion) { "No java.version in gradle.properties" }
-    buildFile.writeText("$newPlugins\n java { toolchain { languageVersion.set(JavaLanguageVersion.of($javaVersion)) } }")
+    val toolchain = "\njava { toolchain { languageVersion.set(JavaLanguageVersion.of($javaVersion)) } }\n"
+    val newPlugins = build.replace(
+        pluginRegex,
+        "\nplugins {$pluginContent\n    $pluginLine\n}\n$toolchain",
+    )
+    buildFile.writeText(newPlugins)
 } else {
     val newBuild = build.replace(Regex("""id\s*\(\s*\"$pluginId\"\s*\)\s*version\s*\".*?\""""), pluginLine)
     buildFile.writeText(newBuild)
