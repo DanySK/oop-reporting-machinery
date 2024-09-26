@@ -5,7 +5,7 @@ on:
 
 jobs:
   branch:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     outputs:
       is_default: ${{ steps.branch-name.outputs.is_default }}
     steps:
@@ -13,7 +13,7 @@ jobs:
         id: branch-name
         uses: tj-actions/branch-names@v8
   version:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     outputs:
        version_tag: ${{ steps.version.outputs.version_tag }}
     steps:
@@ -71,7 +71,7 @@ jobs:
           replacesArtifacts: true
           token: ${{ secrets.GITHUB_TOKEN }}
   anti-plagiarism:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
     needs:
@@ -116,7 +116,7 @@ jobs:
           replacesArtifacts: true
           token: ${{ secrets.GITHUB_TOKEN }}
   success:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs:
       - build
       - anti-plagiarism
