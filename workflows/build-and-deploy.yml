@@ -18,7 +18,7 @@ jobs:
        version_tag: ${{ steps.version.outputs.version_tag }}
     steps:
       - name: Checkout
-        uses: DanySK/action-checkout@0.2.20
+        uses: DanySK/action-checkout@0.2.21
       - uses: paulhatch/semantic-version@v5.4.0
         id: version
         with:
@@ -49,7 +49,7 @@ jobs:
         if: runner.os == 'Windows'
         run: git config --system core.longpaths true
       - name: Checkout
-        uses: DanySK/action-checkout@0.2.20
+        uses: DanySK/action-checkout@0.2.21
       - name: Compute the git stats
         if: runner.os == 'Linux'
         run: |
