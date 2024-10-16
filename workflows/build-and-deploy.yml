@@ -105,7 +105,7 @@ jobs:
             submission \
               --service github:${{ github.repository_owner }}/${{ github.event.repository.name }} \
             corpus \
-              --service github:unibo-oop-projects,bitbucket:danysk/oop1,github:AlmasB/FXGLGames,github:DanySK/libgdx-examples,github:aricci303/game-as-a-lab,github:pslab-unibo/oop-game
+              --service github:unibo-oop-projects,bitbucket:danysk/oop1,github:AlmasB/FXGLGames,github:DanySK/libgdx-examples,github:aricci303/game-as-a-lab,github:pslab-unibo/oop-game,github:k3vonk/UCD-Cluedo
       - name: Release
         if: needs.branch.outputs.is_default
         uses: ncipollo/release-action@v1.14.0
