@@ -146,6 +146,22 @@ val (pluginId, pluginVersion) = Regex("""oop\s*=\s*\"((?:\w|\.|-)+):(\d+\.\d+\.\
     .notNull("No oop entry in catalog:\n$catalog")
     .destructured
 val buildFile = workdir.resolve("build.gradle.kts")
+if (!buildFile.exists()) {
+    println(
+        """
+            |Consegna rigettata per violazione della regola P9:
+            |
+            |P9. Il progetto dovrà contenere, nella radice, un file build.gradle.kts ed una valida configurazione del
+            |gradle wrapper (si utilizzino, come riferimento, i vari esempi di progetto presentati a corredo del laboratorio).
+            |Il lancio del task gradle build deve concludersi con esito positivo,
+            |e deve includere l'esecuzione dei test e la costruzione del fat-jar eseguibile.
+            |Non sono consentiti progetti gradle multi-modulo.
+            |
+            |Vi invito a sistemare e ritentare la consegna, ricordandovi che ogni iterazione in cui il progetto non è in uno stato accettabile riduce le probabilità di valutazione positiva.
+        """.trimMargin().replace("\n", " ").replace("  ", "\n\n")
+    )
+    System.exit(1)
+}
 val build = buildFile.readText()
 val pluginLine: String = "id(\"$pluginId\") version \"$pluginVersion\""
 if (pluginId !in build) {
