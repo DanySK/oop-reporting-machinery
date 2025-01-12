@@ -63,7 +63,7 @@ jobs:
           java-version: 17
       - name: Release
         if: contains('Linux', runner.os) && needs.branch.outputs.is_default
-        uses: ncipollo/release-action@v1.14.0
+        uses: ncipollo/release-action@v1.15.0
         with:
           tag: ${{ needs.version.outputs.version_tag }}
           artifacts: "**/*blame*.md,git-stats.txt,scan-journal.log"
@@ -108,7 +108,7 @@ jobs:
               --service github:unibo-oop-projects,bitbucket:danysk/oop1,github:AlmasB/FXGLGames,github:DanySK/libgdx-examples,github:aricci303/game-as-a-lab,github:pslab-unibo/oop-game,github:k3vonk/UCD-Cluedo
       - name: Release
         if: needs.branch.outputs.is_default
-        uses: ncipollo/release-action@v1.14.0
+        uses: ncipollo/release-action@v1.15.0
         with:
           tag: ${{ needs.version.outputs.version_tag }}
           artifacts: "plagiarism-report/*"
