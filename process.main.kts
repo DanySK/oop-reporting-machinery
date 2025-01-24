@@ -105,7 +105,14 @@ fun createFork(): GHRepository {
     return when {
         fork.isArchived -> fork
         else -> {
-            fork.renameTo(newName)
+            generateSequence {
+                runCatching {
+                    fork.renameTo(newName)
+                }.onFailure {
+                    println("Failed to rename fork: $it")
+                    Thread.sleep(1000)
+                }
+            }.first { it.isSuccess }
             println("fork renamed to $newName")
             targetOrganization.getRepository(newName)
         }
