@@ -195,7 +195,16 @@ val projectSettings = File(workdir, "settings.gradle.kts")
 projectSettings.writeText("rootProject.name = \"oop-$year-$acronym\"\n$settings")
 
 // Add the CI process
-File("workflows").copyRecursively(workdir.resolve(".github/workflows"), overwrite = true)
+val oopCIPrefix = "oop-"
+val workflows = checkNotNull(File(".github/workflows").listFiles()?.filter { it.name.startsWith(oopCIPrefix) }) {
+    ".github/workflows is not a directory"
+}
+check(workflows.isNotEmpty()) {
+    "No OOP workflows found in .github/workflows"
+}
+workflows.forEach { workflow ->
+    workflow.copyTo(workdir.resolve(".github/workflows/${workflow.name.removePrefix(oopCIPrefix)}"), overwrite = true)
+}
 
 // Make sure gradlew is executable
 File(workdir, "gradlew").setExecutable(true)
