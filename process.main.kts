@@ -116,8 +116,7 @@ val fork: GHRepository = generateSequence(repo) { it.parent }
     .flatMap { it.listForks() }
     .find { it.ownerName == targetOrganizationName }
     ?.also {
-        println("Fork already exists: skipping fork and updating instead")
-        it.update()
+        println("Fork already exists: skipping fork and updating instead: ${it.sync(it.defaultBranch)}")
     }
     ?: createFork()
 
