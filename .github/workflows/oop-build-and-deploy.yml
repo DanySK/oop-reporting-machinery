@@ -51,7 +51,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           (curl https://raw.githubusercontent.com/arzzen/git-quick-stats/master/git-quick-stats | bash -s -- -T) > git-stats.txt
-      - uses: DanySK/build-check-deploy-gradle-action@3.7.17
+      - uses: DanySK/build-check-deploy-gradle-action@3.7.18
         with:
           build-command: ./gradlew blame
           check-command: ./gradlew test blame || true
