@@ -59,7 +59,7 @@ jobs:
         uses: DanySK/action-checkout@0.2.22
       - name: Compute the git stats
         env:
-          TERM: dumb
+          TERM: xterm
         if: runner.os == 'Linux'
         shell: bash
         run: |
