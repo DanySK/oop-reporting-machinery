@@ -3,7 +3,6 @@ on:
   workflow_call:
   workflow_dispatch:
 
-jobs:
   branch:
     runs-on: ubuntu-24.04
     outputs:
@@ -45,12 +44,25 @@ jobs:
       - name: Support longpaths
         if: runner.os == 'Windows'
         run: git config --system core.longpaths true
+      - name: Trick Renovate
+        id: versions
+        shell: bash
+        run: |
+          USES=$(cat <<TRICK_RENOVATE
+          - uses: git-quick-stats/git-quick-stats@8de8c43212ce64542ef96783b27180a5577201a0
+          TRICK_RENOVATE
+          )
+          export USES="$USES"
+          ruby -e 'ENV["USES"].lines.map { |line| /^\s*-\s+uses:\s+[^\s]+\/([^\s]+)@(.*)\s*$/.match(line) }.each { |match| puts "#{match[1]}=#{match[2]}" }' >> $GITHUB_OUTPUT
       - name: Checkout
         uses: DanySK/action-checkout@0.2.22
       - name: Compute the git stats
+        env:
+          TERM: dumb
         if: runner.os == 'Linux'
+        shell: bash
         run: |
-          (curl https://raw.githubusercontent.com/arzzen/git-quick-stats/master/git-quick-stats | bash -s -- -T) > git-stats.txt
+          bash <(curl -s https://raw.githubusercontent.com/git-quick-stats/git-quick-stats/${{ steps.versions.outputs.git-quick-stats }}/git-quick-stats) -T > git-stats.txt
       - uses: DanySK/build-check-deploy-gradle-action@4.0.1
         with:
           build-command: ./gradlew blame
