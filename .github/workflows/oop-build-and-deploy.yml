@@ -3,6 +3,7 @@ on:
   workflow_call:
   workflow_dispatch:
 
+jobs:
   branch:
     runs-on: ubuntu-24.04
     outputs:
