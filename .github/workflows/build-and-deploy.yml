@@ -26,3 +26,4 @@ jobs:
         run: |
           ./process.main.kts unibo-oop-projects/OOP23-LucaFerar-Soprnzetti-Vdamianob-Velli-wulf
           ./process.main.kts unibo-oop-projects/OOP23-ChristianRemschiC-GiorgiaPateraGior-ClaudiuRemschi-GiorgiaPatera-JagoCamoni-Unknown-GrubClash
+          ./process.main.kts unibo-oop-projects/OOP24-Claudio-ClaudioLodi-LodiClaudio-LuigiLinari-Tbandini-TommasoBandini-TommasoGoni-Emberline
