@@ -64,7 +64,7 @@ jobs:
         shell: bash
         run: |
           bash <(curl -s https://raw.githubusercontent.com/git-quick-stats/git-quick-stats/${{ steps.versions.outputs.git-quick-stats }}/git-quick-stats) -T > git-stats.txt
-      - uses: DanySK/build-check-deploy-gradle-action@4.0.3
+      - uses: DanySK/build-check-deploy-gradle-action@4.0.4
         with:
           build-command: ./gradlew blame
           check-command: ./gradlew test blame || true
