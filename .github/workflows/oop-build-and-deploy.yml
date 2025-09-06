@@ -50,7 +50,7 @@ jobs:
         shell: bash
         run: |
           USES=$(cat <<TRICK_RENOVATE
-          - uses: git-quick-stats/git-quick-stats@261262ab4e042836444d4fd69935ffcb9227a902
+          - uses: git-quick-stats/git-quick-stats@125eec713664aaadf9ba22185848a8db5ab986ca
           TRICK_RENOVATE
           )
           export USES="$USES"
