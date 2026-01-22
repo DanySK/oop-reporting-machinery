@@ -16,7 +16,7 @@ jobs:
       - name: fetch the java version
         id: java-version
         run: echo "java-version=$(grep 'FROM eclipse-temurin' < Dockerfile | sed 's/FROM eclipse-temurin://')" >> $GITHUB_OUTPUT
-      - uses: actions/setup-java@v5.1.0
+      - uses: actions/setup-java@v5.2.0
         with:
           distribution: 'temurin'
           java-version: ${{ steps.java-version.outputs.java-version }}
