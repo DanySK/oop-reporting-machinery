@@ -18,7 +18,7 @@ jobs:
        version_tag: ${{ steps.version.outputs.version_tag }}
     steps:
       - name: Checkout
-        uses: DanySK/action-checkout@0.2.27
+        uses: DanySK/action-checkout@0.2.28
       - uses: paulhatch/semantic-version@v6.0.0
         id: version
         with:
@@ -56,7 +56,7 @@ jobs:
           export USES="$USES"
           ruby -e 'ENV["USES"].lines.map { |line| /^\s*-\s+uses:\s+[^\s]+\/([^\s]+)@(.*)\s*$/.match(line) }.each { |match| puts "#{match[1]}=#{match[2]}" }' >> $GITHUB_OUTPUT
       - name: Checkout
-        uses: DanySK/action-checkout@0.2.27
+        uses: DanySK/action-checkout@0.2.28
       - name: Compute the git stats
         env:
           TERM: xterm
