@@ -39,7 +39,7 @@ require(course in courses.keys) {
 }
 val target = courses.getValue(course)
 
-args.forEach { projectSlug ->
+args.drop(1).forEach { projectSlug ->
     /**
      * Actual project acronym
      */
