@@ -15,7 +15,6 @@ import java.util.*
 import kotlin.io.path.createTempDirectory
 
 val token = System.getenv()["GITHUB_TOKEN"]
-val targetOrganizationName = "unibo-oop-projects"
 val surnameRegex = Regex(".*?(\\w)+.*?$")
 val projectNameRegex = Regex("""(\w|\.|-)+/[Oo]{2}[Pp]-?\d+-?((\w|-|\.)+)""")
 require(!token.isNullOrBlank()) {
@@ -24,6 +23,21 @@ require(!token.isNullOrBlank()) {
 require(args.isNotEmpty()) {
     println("Usage: process.main.kts <repo>")
 }
+
+data class CourseTarget(
+    val prefix: String,
+    val org: String,
+)
+
+val courses = mapOf(
+    "oop" to CourseTarget("OOP", "unibo-oop-projects"),
+    "pss" to CourseTarget("PSS", "unibo-lp-pss-projects"),
+)
+val course = args.first().lowercase()
+require(course in courses.keys) {
+    "Unknown course: $course, must be in ${courses.keys}"
+}
+val target = courses.getValue(course)
 
 args.forEach { projectSlug ->
     /**
@@ -85,7 +99,7 @@ args.forEach { projectSlug ->
             .takeUnless { it.isEmpty() }
             ?: listOf("Unknown")
         println("Author names: ${committers.joinToString(separator = ", ")}")
-        fun makeRepoName(authorNames: String) = "OOP$year-${authorNames}-$acronym"
+        fun makeRepoName(authorNames: String) = "${target.prefix}$year-${authorNames}-$acronym"
         val maxCharsForAuthors = 100 - makeRepoName("").length - committers.size
         val filteredAuthors = committers.toMutableList()
         repeat(committers.sumOf { it.length } - maxCharsForAuthors) {
@@ -94,13 +108,13 @@ args.forEach { projectSlug ->
         }
         val authorNames = filteredAuthors.joinToString(separator = "-")
         // Maximum 100 chars allowed in GitHub
-        val newName = "OOP$year-${authorNames.take(100)}-$acronym"
+        val newName = "${target.prefix}$year-${authorNames.take(100)}-$acronym"
         println("Fork name: $newName")
-        val targetOrganization = requireNotNull(github.getOrganization(targetOrganizationName))
+        val targetOrganization = requireNotNull(github.getOrganization(target.org))
         require(targetOrganization.getRepository(newName) == null) {
-            "Repository $newName already exists in $targetOrganizationName: ${targetOrganization.getRepository(newName)}"
+            "Repository $newName already exists in ${target.org}: ${targetOrganization.getRepository(newName)}"
         }
-        println("Forking ${repo.fullName} to $targetOrganizationName")
+        println("Forking ${repo.fullName} to ${target.org}")
         val fork = repo.forkTo(targetOrganization)
         println("forked to ${fork.name}")
         return when {
@@ -122,7 +136,7 @@ args.forEach { projectSlug ->
 
     val fork: GHRepository = generateSequence(repo) { it.parent }
         .flatMap { it.listForks() }
-        .find { it.ownerName == targetOrganizationName }
+        .find { it.ownerName == target.org }
         ?.also {
             println("Fork already exists: skipping fork and updating instead: ${it.sync(it.defaultBranch)}")
         }
@@ -193,7 +207,7 @@ args.forEach { projectSlug ->
     // 3. prepare a settings file
     val settings = File("settings.gradle.kts").readText()
     val projectSettings = File(workdir, "settings.gradle.kts")
-    projectSettings.writeText("rootProject.name = \"oop-$year-$acronym\"\n$settings")
+    projectSettings.writeText("rootProject.name = \"${target.prefix.lowercase()}-$year-$acronym\"\n$settings")
 
     // Add the CI process
     val oopCIPrefix = "oop-"
