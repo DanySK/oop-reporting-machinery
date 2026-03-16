@@ -10,7 +10,10 @@ jobs:
   dispatcher:
     runs-on: ubuntu-24.04
     if: >-
-      github.repository_owner == 'unibo-oop-projects' && (
+      (
+        github.repository_owner == 'unibo-oop-projects'
+        || github.repository_owner == 'unibo-lp-pss-projects'
+      ) && (
         github.event_name != 'pull_request'
         || github.event.pull_request.head.repo.full_name != github.repository
         || contains(github.head_ref, 'dependabot')
