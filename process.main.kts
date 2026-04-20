@@ -21,7 +21,7 @@ require(!token.isNullOrBlank()) {
     println("GITHUB_TOKEN is not set")
 }
 require(args.isNotEmpty()) {
-    println("Usage: process.main.kts <repo>")
+    println("Usage: process.main.kts <oop|pss> <repo> [<repo> ...]")
 }
 
 data class CourseTarget(
@@ -38,6 +38,9 @@ require(course in courses.keys) {
     "Unknown course: $course, must be in ${courses.keys}"
 }
 val target = courses.getValue(course)
+require(args.drop(1).isNotEmpty()) {
+    "At least one repository slug is required"
+}
 
 args.drop(1).forEach { projectSlug ->
     /**
@@ -247,4 +250,3 @@ args.drop(1).forEach { projectSlug ->
         Runtime.getRuntime().exec(ideaCommand)
     }.onFailure { println(ideaCommand) }
 }
-
