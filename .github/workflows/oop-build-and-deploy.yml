@@ -114,7 +114,7 @@ jobs:
             corpus \
               --service github:unibo-oop-projects,github:unibo-lp-pss-projects,bitbucket:danysk/oop1,github:AlmasB/FXGLGames,github:DanySK/libgdx-examples,github:aricci303/game-as-a-lab,github:pslab-unibo/oop-game,github:k3vonk/UCD-Cluedo
       - name: Upload workflow artifact for validation
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: anti-plagiarism-report
           path: plagiarism-report/*
@@ -135,7 +135,7 @@ jobs:
       - anti-plagiarism
     steps:
       - name: Download anti-plagiarism reports
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: anti-plagiarism-report
           path: downloaded-plagiarism-report
