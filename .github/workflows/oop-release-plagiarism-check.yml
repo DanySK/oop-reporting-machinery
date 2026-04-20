@@ -1,0 +1,82 @@
+name: Validate release report asset
+
+on:
+  release:
+    types: [created, edited]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-report:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Validate report-* asset
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_ID: ${{ github.event.release.id }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mapfile -t matches < <(
+            gh api \
+              "/repos/${GITHUB_REPOSITORY}/releases/${RELEASE_ID}/assets?per_page=100" \
+              --jq '.[] | select(.name | startswith("report-")) | [.id, .name] | @tsv'
+          )
+
+          count=${#matches[@]}
+
+          if (( count == 0 )); then
+            echo "No report-* asset found. Nothing to validate."
+            exit 0
+          fi
+
+          if (( count > 1 )); then
+            echo "Expected exactly one report-* asset, found $count:" >&2
+            printf '  %s\n' "${matches[@]}" >&2
+            exit 1
+          fi
+
+          IFS=$'\t' read -r asset_id asset_name <<< "${matches[0]}"
+          echo "Validating ${asset_name}"
+
+          gh api \
+            -H "Accept: application/octet-stream" \
+            "/repos/${GITHUB_REPOSITORY}/releases/assets/${asset_id}" \
+            > report.txt
+
+          mapfile -t footer < <(
+            tr -d '\r' < report.txt |
+            sed '/^[[:space:]]*$/d' |
+            tail -n 2
+          )
+
+          if (( ${#footer[@]} != 2 )); then
+            echo "Report must end with at least two non-blank lines." >&2
+            exit 1
+          fi
+
+          minus_line="${footer[0]}"
+          plus_line="${footer[1]}"
+
+          if [[ ! "$minus_line" =~ ^-{10,}$ ]]; then
+            echo "Penultimate non-blank line is invalid:" >&2
+            printf '%s\n' "$minus_line" >&2
+            exit 1
+          fi
+
+          if [[ ! "$plus_line" =~ ^\+{10,}$ ]]; then
+            echo "Last non-blank line is invalid:" >&2
+            printf '%s\n' "$plus_line" >&2
+            exit 1
+          fi
+
+          if (( ${#minus_line} != ${#plus_line} )); then
+            echo "Footer line lengths differ: ${#minus_line} vs ${#plus_line}" >&2
+            exit 1
+          fi
+
+          echo "Report footer is valid."

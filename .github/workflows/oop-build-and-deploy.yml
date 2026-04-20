@@ -113,6 +113,12 @@ jobs:
               --service github:${{ github.repository_owner }}/${{ github.event.repository.name }} \
             corpus \
               --service github:unibo-oop-projects,github:unibo-lp-pss-projects,bitbucket:danysk/oop1,github:AlmasB/FXGLGames,github:DanySK/libgdx-examples,github:aricci303/game-as-a-lab,github:pslab-unibo/oop-game,github:k3vonk/UCD-Cluedo
+      - name: Upload workflow artifact for validation
+        uses: actions/upload-artifact@v4
+        with:
+          name: anti-plagiarism-report
+          path: plagiarism-report/*
+          if-no-files-found: error
       - name: Release
         if: needs.branch.outputs.is_default
         uses: ncipollo/release-action@v1.20.0
@@ -122,11 +128,73 @@ jobs:
           allowUpdates: true
           replacesArtifacts: true
           token: ${{ secrets.GITHUB_TOKEN }}
+
+  validate-anti-plagiarism:
+    runs-on: ubuntu-24.04
+    needs:
+      - anti-plagiarism
+    steps:
+      - name: Download anti-plagiarism reports
+        uses: actions/download-artifact@v4
+        with:
+          name: anti-plagiarism-report
+          path: downloaded-plagiarism-report
+
+      - name: Validate report-* footer
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          matches=()
+          for f in downloaded-plagiarism-report/*; do
+            base="$(basename "$f")"
+            if [[ "$base" == report-* ]]; then
+              matches+=("$f")
+            fi
+          done
+          count=${#matches[@]}
+          if (( count == 0 )); then
+            echo "No report-* file found. Nothing to validate."
+            exit 0
+          fi
+          if (( count > 1 )); then
+            echo "Expected exactly one report-* file, found $count:" >&2
+            printf '  %s\n' "${matches[@]}" >&2
+            exit 1
+          fi
+          report="${matches[0]}"
+          echo "Validating $report"
+          mapfile -t footer < <(
+            tr -d '\r' < "$report" |
+            sed '/^[[:space:]]*$/d' |
+            tail -n 2
+          )
+          if (( ${#footer[@]} != 2 )); then
+            echo "Report must end with at least two non-blank lines." >&2
+            exit 1
+          fi
+          minus_line="${footer[0]}"
+          plus_line="${footer[1]}"
+          if [[ ! "$minus_line" =~ ^-{10,}$ ]]; then
+            echo "🚩Check the report!🚩" >&2
+            exit 1
+          fi
+          if [[ ! "$plus_line" =~ ^\+{10,}$ ]]; then
+            echo "🚩Check the report!🚩" >&2
+            exit 1
+          fi
+          if (( ${#minus_line} != ${#plus_line} )); then
+            echo "🚩Check the report!🚩" >&2
+            exit 1
+          fi
+          echo "No major red flags detected."
+
   success:
     runs-on: ubuntu-24.04
     needs:
       - build
       - anti-plagiarism
+      - validate-anti-plagiarism
     if: >-
       always() && (
         contains(join(needs.*.result, ','), 'failure')
