@@ -1,3 +1,5 @@
 .gradle/
+.gradle-user-home/
 .idea/
 build/
+scan-journal.log
