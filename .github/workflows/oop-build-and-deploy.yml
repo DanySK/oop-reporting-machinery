@@ -135,7 +135,7 @@ jobs:
       - anti-plagiarism
     steps:
       - name: Download anti-plagiarism reports
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: anti-plagiarism-report
           path: downloaded-plagiarism-report
