@@ -70,7 +70,7 @@ jobs:
           check-command: ./gradlew test blame || true
           should-run-codecov: false
           should-deploy: false
-          java-version: 17
+          java-version: 21
       - name: Release
         if: contains('Linux', runner.os) && needs.branch.outputs.is_default
         uses: ncipollo/release-action@v1.21.0
