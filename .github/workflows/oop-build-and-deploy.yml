@@ -19,7 +19,7 @@ jobs:
     steps:
       - name: Checkout
         uses: DanySK/action-checkout@0.2.31
-      - uses: paulhatch/semantic-version@v6.0.3
+      - uses: paulhatch/semantic-version@v6.0.4
         id: version
         with:
           tag_prefix: ""
