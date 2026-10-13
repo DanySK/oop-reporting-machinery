@@ -16,7 +16,7 @@ import kotlin.io.path.createTempDirectory
 
 val token = System.getenv()["GITHUB_TOKEN"]
 val surnameRegex = Regex(".*?(\\w)+.*?$")
-val projectNameRegex = Regex("""(\w|\.|-)+/[Oo]{2}[Pp]-?\d+-?((\w|-|\.)+)""")
+val projectNameRegex = Regex("""(\w|\.|-)+/(([Oo]{2}[Pp])|([pP][sS]{2}))-?\d+-?((\w|-|\.)+)""")
 require(!token.isNullOrBlank()) {
     println("GITHUB_TOKEN is not set")
 }
@@ -47,7 +47,7 @@ args.drop(1).forEach { projectSlug ->
      * Actual project acronym
      */
     val acronym = projectSlug.let {
-        projectNameRegex.matchEntire(it)?.groupValues?.get(2) ?: it.substringAfterLast("-")
+        projectNameRegex.matchEntire(it)?.groupValues?.get(5) ?: it.substringAfterLast("-")
     }
     val now: LocalDateTime = LocalDateTime.now()
     val month = now.format(DateTimeFormatter.ofPattern("MM")).toInt()
