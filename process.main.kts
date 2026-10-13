@@ -118,7 +118,7 @@ args.drop(1).forEach { projectSlug ->
             "Repository $newName already exists in ${target.org}: ${targetOrganization.getRepository(newName)}"
         }
         println("Forking ${repo.fullName} to ${target.org}")
-        val fork = repo.forkTo(targetOrganization)
+        val fork = repo.createFork().organization(targetOrganization).create()
         println("forked to ${fork.name}")
         return when {
             fork.isArchived -> fork
