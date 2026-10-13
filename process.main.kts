@@ -161,6 +161,21 @@ args.drop(1).forEach { projectSlug ->
     println(shellRun { command("git", listOf("clone", url, workdir.absolutePath)) })
 
     /*
+     * Check the P8 rule
+     */
+    val jars = checkNotNull(workdir.list { file, _ -> file.extension == "jar" })
+    val pdfs = checkNotNull(workdir.list { file, _ -> file.extension == "pdf" })
+    require(jars.size == 1 && pdfs.isNotEmpty()) {
+        """
+        |  Consegna rigettata per violazione della regola P8:
+        |
+        |«Nella radice del repository ci dovrà essere: (i) un file PDF per la relazione e (ii) un singolo file JAR eseguibile dell'applicazione»
+        |
+        |Vi invito a sistemare e ritentare la consegna, ricordandovi che ogni iterazione in cui il progetto non è in uno stato accettabile riduce le probabilità di valutazione positiva.
+        """.trimMargin().replace("\n", " ").replace("  ", "\n\n")
+    }
+
+    /*
     * Apply the QA plugin
     */
     val catalog = File("gradle/libs.versions.toml").apply { check(exists()) }.readText()
