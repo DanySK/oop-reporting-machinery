@@ -163,8 +163,8 @@ args.drop(1).forEach { projectSlug ->
     /*
      * Check the P8 rule
      */
-    val jars = checkNotNull(workdir.list { file, _ -> file.extension == "jar" })
-    val pdfs = checkNotNull(workdir.list { file, _ -> file.extension == "pdf" })
+    val jars = checkNotNull(workdir.listFiles { it.extension == "jar" })
+    val pdfs = checkNotNull(workdir.listFiles { it.extension == "pdf" })
     require(jars.size == 1 && pdfs.isNotEmpty()) {
         """
         |  Consegna rigettata per violazione della regola P8:
